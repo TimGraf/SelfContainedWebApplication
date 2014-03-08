@@ -15,22 +15,28 @@ import org.mozilla.browser.MozillaPanel;
 public class ApplicationClient {
 	private Log log  = LogFactory.getLog(ApplicationClient.class);
 	//
-	private JFrame frame;
+	private JFrame       appFrame;
+    private MozillaPanel mozPanel;
 	
 	public ApplicationClient(String xulRunnerHome, String appUrl) {
-		// Maybe create a panel instead and hide some controls
-		MozillaConfig.setXULRunnerHome(new File(xulRunnerHome));
-	    
-		frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-	    
-        // Hide the tool bar and status bar on the moz swing panel
-	    final MozillaPanel moz = new MozillaPanel(VisibilityMode.FORCED_HIDDEN, VisibilityMode.FORCED_HIDDEN);
-        moz.load(appUrl);
-        moz.setMinimumSize(new Dimension(800, 600));
-        
-        frame.getContentPane().add(moz, BorderLayout.CENTER);
-        frame.setVisible(true);
+        createMozillaPanel(xulRunnerHome, appUrl);
+        createAppFrame();
 	}
+
+    private void createMozillaPanel(String xulRunnerHome, String appUrl) {
+        MozillaConfig.setXULRunnerHome(new File(xulRunnerHome));
+
+        mozPanel = new MozillaPanel(VisibilityMode.FORCED_HIDDEN, VisibilityMode.FORCED_HIDDEN);
+        mozPanel.load(appUrl);
+        mozPanel.setMinimumSize(new Dimension(800, 600));
+    }
+
+    private void createAppFrame() {
+        appFrame = new JFrame();
+        appFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        appFrame.setSize(800, 600);
+
+        appFrame.getContentPane().add(mozPanel, BorderLayout.CENTER);
+        appFrame.setVisible(true);
+    }
 }

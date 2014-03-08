@@ -27,12 +27,11 @@ public class ApplicationContainer {
 		PropertyConfigurator.configure(LOG4J_FILE);
 	}
 	
-	private Log        log  = LogFactory.getLog(ApplicationContainer.class);
-	private Properties prop = new Properties();
-	
-	private String                        workingDirectory;
-	private ApplicationDatabaseServer    databaseServer;
-	private ApplicationServer applcationServer;
+	private Log        applicationLog        = LogFactory.getLog(ApplicationContainer.class);
+	private Properties applicationProperties = new Properties();
+
+	private ApplicationDatabaseServer databaseServer;
+	private ApplicationServer         applicationServer;
 
 	public static void main(String[] args) {
 		new ApplicationContainer();
@@ -40,39 +39,61 @@ public class ApplicationContainer {
 	
 	public ApplicationContainer() {
 		try {
-			//
-			workingDirectory = new File (".").getCanonicalPath();
-			//
-			prop.load(new FileInputStream(CONFIG_FILE));
-			//
-			int    appServerPort = Integer.parseInt(prop.getProperty(APP_SERVER_PORT));
-			String appFileName   = prop.getProperty(APP_FILE_NAME);
-			String appContext    = prop.getProperty(APP_CONTEXT);
-			String appUrl        = prop.getProperty(APP_URL);
-			//
-			int    dbServerPort = Integer.parseInt(prop.getProperty(DB_SERVER_PORT));
-			String dbUser       = prop.getProperty(DB_USER);
-			String dbPassword   = prop.getProperty(DB_PASSWORD);
-			String dbFilePath   = prop.getProperty(DB_FILE_PATH);
-			//
-			String xulRunnerHome = workingDirectory + prop.getProperty(XUL_RUNNER_HOME);
-			//
-			applcationServer = new ApplicationServer(appServerPort, appFileName, appContext);
-			databaseServer   = new ApplicationDatabaseServer(dbServerPort, dbUser, dbPassword, dbFilePath);
-			//
-			log.debug("Starting application server.");
-			applcationServer.startServer();
-			//
-			log.debug("Starting database server.");
-			databaseServer.startServer();
-			//
-			while (!applcationServer.serverRunning() || !databaseServer.serverRunning()) {
-				log.debug("Waiting for servers to start ...");
-			}
-			
-			new ApplicationClient(xulRunnerHome, appUrl);
+            initApplicationConfiguration();
+            createApplicationServer();
+            createDatabaseServer();
+            startDatabaseServer();
+            startApplicationServer();
+            createApplicationWebClient();
 		} catch (IOException ex) {
-			log.error(ex);
+			applicationLog.error(ex);
 		}
 	}
+
+    private void initApplicationConfiguration() throws IOException {
+        applicationProperties.load(new FileInputStream(CONFIG_FILE));
+    }
+
+    private void createApplicationServer() {
+        int    appServerPort = Integer.parseInt(applicationProperties.getProperty(APP_SERVER_PORT));
+        String appFileName   = applicationProperties.getProperty(APP_FILE_NAME);
+        String appContext    = applicationProperties.getProperty(APP_CONTEXT);
+
+        applicationServer = new ApplicationServer(appServerPort, appFileName, appContext);
+    }
+
+    private void createDatabaseServer() throws IOException {
+        int    dbServerPort = Integer.parseInt(applicationProperties.getProperty(DB_SERVER_PORT));
+        String dbUser       = applicationProperties.getProperty(DB_USER);
+        String dbPassword   = applicationProperties.getProperty(DB_PASSWORD);
+        String dbFilePath   = applicationProperties.getProperty(DB_FILE_PATH);
+
+        databaseServer   = new ApplicationDatabaseServer(dbServerPort, dbUser, dbPassword, dbFilePath);
+    }
+
+    private void startApplicationServer() {
+        applicationLog.debug("Starting application server.");
+        applicationServer.startServer();
+
+        while (!applicationServer.serverRunning()) {
+            applicationLog.debug("Waiting for application server to start ...");
+        }
+    }
+
+    private void startDatabaseServer() {
+        applicationLog.debug("Starting database server.");
+        databaseServer.startServer();
+
+        while (!databaseServer.serverRunning()) {
+            applicationLog.debug("Waiting for database server to start ...");
+        }
+    }
+
+    private void createApplicationWebClient() throws IOException {
+        String appUrl        = applicationProperties.getProperty(APP_URL);
+        String appDirectory  = new File (".").getCanonicalPath();
+        String xulRunnerHome = appDirectory + applicationProperties.getProperty(XUL_RUNNER_HOME);
+
+        new ApplicationClient(xulRunnerHome, appUrl);
+    }
 }
