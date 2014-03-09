@@ -50,6 +50,6 @@ public class ApplicationDatabaseServer {
     }
     
     public boolean serverRunning() {
-    	return (server == null) ? false : true;
+    	return (server != null);
     }
 }

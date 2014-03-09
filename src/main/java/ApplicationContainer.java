@@ -11,8 +11,8 @@ import org.applicationcontainer.client.ApplicationClient;
 import org.applicationcontainer.dbserver.ApplicationDatabaseServer;
 
 public class ApplicationContainer {
-	private static final String CONFIG_FILE     = "./resources/config.properties";
-	private static final String LOG4J_FILE      = "./resources/log4j.properties";	
+	private static final String CONFIG_FILE     = "/src/main/resources/config.properties";
+	private static final String LOG4J_FILE      = "/src/main/resources/log4j.properties";
 	private static final String APP_SERVER_PORT = "appServerPort";
 	private static final String APP_FILE_NAME   = "appFileName";
 	private static final String APP_CONTEXT     = "appContext";
@@ -22,10 +22,19 @@ public class ApplicationContainer {
 	private static final String DB_PASSWORD     = "dbPassword"; 
 	private static final String DB_FILE_PATH    = "dbFilePath";
 	private static final String XUL_RUNNER_HOME = "xulRunnerHome";
-	
-	static {
-		PropertyConfigurator.configure(LOG4J_FILE);
-	}
+
+    private static String appDirectory;
+
+    static {
+
+        try {
+            appDirectory = new File(".").getCanonicalPath();
+        } catch (IOException e) {
+            appDirectory = "./";
+        }
+
+        PropertyConfigurator.configure(appDirectory + LOG4J_FILE);
+    }
 	
 	private Log        applicationLog        = LogFactory.getLog(ApplicationContainer.class);
 	private Properties applicationProperties = new Properties();
@@ -51,12 +60,12 @@ public class ApplicationContainer {
 	}
 
     private void initApplicationConfiguration() throws IOException {
-        applicationProperties.load(new FileInputStream(CONFIG_FILE));
+        applicationProperties.load(new FileInputStream(appDirectory + CONFIG_FILE));
     }
 
     private void createApplicationServer() {
         int    appServerPort = Integer.parseInt(applicationProperties.getProperty(APP_SERVER_PORT));
-        String appFileName   = applicationProperties.getProperty(APP_FILE_NAME);
+        String appFileName   = appDirectory + applicationProperties.getProperty(APP_FILE_NAME);
         String appContext    = applicationProperties.getProperty(APP_CONTEXT);
 
         applicationServer = new ApplicationServer(appServerPort, appFileName, appContext);
@@ -66,7 +75,7 @@ public class ApplicationContainer {
         int    dbServerPort = Integer.parseInt(applicationProperties.getProperty(DB_SERVER_PORT));
         String dbUser       = applicationProperties.getProperty(DB_USER);
         String dbPassword   = applicationProperties.getProperty(DB_PASSWORD);
-        String dbFilePath   = applicationProperties.getProperty(DB_FILE_PATH);
+        String dbFilePath   = appDirectory + applicationProperties.getProperty(DB_FILE_PATH);
 
         databaseServer   = new ApplicationDatabaseServer(dbServerPort, dbUser, dbPassword, dbFilePath);
     }
@@ -91,7 +100,6 @@ public class ApplicationContainer {
 
     private void createApplicationWebClient() throws IOException {
         String appUrl        = applicationProperties.getProperty(APP_URL);
-        String appDirectory  = new File (".").getCanonicalPath();
         String xulRunnerHome = appDirectory + applicationProperties.getProperty(XUL_RUNNER_HOME);
 
         new ApplicationClient(xulRunnerHome, appUrl);

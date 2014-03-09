@@ -2,15 +2,15 @@ package org.applicationcontainer.appserver;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.webapp.WebAppContext;
 
 public class ApplicationServer {
 	private Log log  = LogFactory.getLog(ApplicationServer.class);
 	
 	private Server        server;
 	private WebAppContext webApp;
-	
+
 	public ApplicationServer(int port, String webApp, String contextPath) {
         this.server = new Server(port);
         this.webApp = new WebAppContext(webApp, contextPath);
