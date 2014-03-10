@@ -1,16 +1,15 @@
 package org.applicationcontainer.dbserver;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.db4o.Db4oEmbedded;
 import com.db4o.ObjectServer;
 import com.db4o.config.EmbeddedConfiguration;
 import com.db4o.cs.Db4oClientServer;
 import com.db4o.reflect.jdk.JdkReflector;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public class ApplicationDatabaseServer {
 	private Log log  = LogFactory.getLog(ApplicationDatabaseServer.class);
@@ -47,9 +46,10 @@ public class ApplicationDatabaseServer {
     public void stopServer() {
     	log.debug("Stop database server.");
     	server.close();
+        server = null;
     }
     
-    public boolean serverRunning() {
+    public boolean isRunning() {
     	return (server != null);
     }
 }

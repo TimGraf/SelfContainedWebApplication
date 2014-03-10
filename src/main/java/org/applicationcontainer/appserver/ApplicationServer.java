@@ -40,7 +40,7 @@ public class ApplicationServer {
 		}
 	}
 	
-	public boolean serverRunning() {
+	public boolean isRunning() {
 		
 		if (server == null) {
 			return false;

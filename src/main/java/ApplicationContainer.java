@@ -1,14 +1,14 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 import org.applicationcontainer.appserver.ApplicationServer;
 import org.applicationcontainer.client.ApplicationClient;
 import org.applicationcontainer.dbserver.ApplicationDatabaseServer;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class ApplicationContainer {
 	private static final String CONFIG_FILE     = "/src/main/resources/config.properties";
@@ -49,12 +49,13 @@ public class ApplicationContainer {
 	public ApplicationContainer() {
 		try {
             initApplicationConfiguration();
+            attachShutDownHook();
             createApplicationServer();
             createDatabaseServer();
             startDatabaseServer();
             startApplicationServer();
             createApplicationWebClient();
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			applicationLog.error(ex);
 		}
 	}
@@ -80,21 +81,23 @@ public class ApplicationContainer {
         databaseServer   = new ApplicationDatabaseServer(dbServerPort, dbUser, dbPassword, dbFilePath);
     }
 
-    private void startApplicationServer() {
+    private void startApplicationServer() throws InterruptedException {
         applicationLog.debug("Starting application server.");
         applicationServer.startServer();
 
-        while (!applicationServer.serverRunning()) {
+        while (!applicationServer.isRunning()) {
             applicationLog.debug("Waiting for application server to start ...");
+            Thread.sleep(1000);
         }
     }
 
-    private void startDatabaseServer() {
+    private void startDatabaseServer() throws InterruptedException {
         applicationLog.debug("Starting database server.");
         databaseServer.startServer();
 
-        while (!databaseServer.serverRunning()) {
+        while (!databaseServer.isRunning()) {
             applicationLog.debug("Waiting for database server to start ...");
+            Thread.sleep(1000);
         }
     }
 
@@ -103,5 +106,21 @@ public class ApplicationContainer {
         String xulRunnerHome = appDirectory + applicationProperties.getProperty(XUL_RUNNER_HOME);
 
         new ApplicationClient(xulRunnerHome, appUrl);
+    }
+
+    public void attachShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+
+                if (databaseServer != null) {
+                    databaseServer.stopServer();
+                }
+
+                if (applicationServer != null) {
+                    applicationServer.stopServer();
+                }
+            }
+        });
     }
 }
